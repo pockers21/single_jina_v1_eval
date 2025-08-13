@@ -1,0 +1,10 @@
+{
+  "dataset_revision": null,
+  "mteb_dataset_name": "ThuNewsClusteringS2S",
+  "mteb_version": "1.1.1",
+  "test": {
+    "evaluation_time": 159.91,
+    "v_measure": 0.4891299878316227,
+    "v_measure_std": 0.02538437146064811
+  }
+}
