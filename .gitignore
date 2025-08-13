@@ -1,0 +1,39 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyTorch model files
+*.bin
+*.pt
+*.pth
+
+# Large data files
+pytorch_model.bin
+model.safetensors
+
+# Cache directories
+.cache/
+hf_cache/modules/
+hf_cache/models*/
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Results
+results/
+outputs/
