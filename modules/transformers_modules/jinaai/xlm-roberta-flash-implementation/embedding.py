@@ -67,8 +67,8 @@ class XLMRobertaEmbeddings(nn.Module):
                 task_embeddings = self.word_embeddings(task_input_ids)###227
                 print('xlmRobertEmb()inp',LA.matrix_norm(self.word_embeddings.weight.data),LA.matrix_norm(task_embeddings))
                 embeddings[task_indices] = task_embeddings
-        # else:# not here
-        #     embeddings = self.word_embeddings(input_ids)
+        else:
+            embeddings = self.word_embeddings(input_ids)
         # if self.max_position_embeddings > 0:# not here
         #     if position_ids is None:
         #         position_ids = create_position_ids_from_input_ids(
@@ -93,7 +93,7 @@ class XLMRobertaEmbeddings(nn.Module):
                     embeddings[task_indices] = (
                         embeddings[task_indices] + task_token_type_embeddings
                     )
-            # else:# not here
-            #     token_type_embeddings = self.token_type_embeddings(token_type_ids)
-            #     embeddings = embeddings + token_type_embeddings
+            else:
+                token_type_embeddings = self.token_type_embeddings(token_type_ids)
+                embeddings = embeddings + token_type_embeddings
         return embeddings

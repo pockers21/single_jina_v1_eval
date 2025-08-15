@@ -480,7 +480,9 @@ def load_merged_lora_weight(model):
     model.load_state_dict(state1)
 
     return model.eval()
-if __name__=='__main__':
+
+
+def simple_test():
     torch.manual_seed(123)
 
     # cfg=XLMRobertaFlashConfig.from_pretrained('/Users/yr/Desktop/notebook1/download_model/jina_emb_v3')#不行,有所有task
@@ -511,4 +513,127 @@ if __name__=='__main__':
     lhs = o.last_hidden_state
     print(lhs[0, 0, :5])## 1.4098, -2.0369, -2.0049, -0.0043, -0.4095
     #pd.to_pickle(lhs.detach().numpy(), '/Users/yr/Desktop/notebook1/code/jinaclip_arch/varifyTXT.pkl')
+
+
+
+
+def separate_tower_test():
+    from transformers import AutoModel
+    
+    print("Loading custom text model...")
+    torch.manual_seed(123)
+    cfg = XLMRobertaFlashConfig()
+    cfg.name_or_path = '/autodl-fs/data/jina/HF_cache_raw/jina-embeddings-v3'
+    text_model = XLMRobertaLoRA._from_config(cfg, add_pooling_layer=False)
+    text_model.eval()
+    
+    PATH = '/root/autodl-tmp/jina/pytorch_model_mergeLoraPartcorrect.bin'
+    merged_text_weights = torch.load(PATH, map_location='cpu')
+    
+    state_dict_mapped = {}
+    for k, v in merged_text_weights.items():
+        new_key = k.replace('text_model.transformer.', 'roberta.')
+        state_dict_mapped[new_key] = v
+    
+    text_model.load_state_dict(state_dict_mapped, strict=False)
+    print("Custom text model loaded successfully!")
+    
+    print("Loading full model for image tower...")
+    full_model = AutoModel.from_pretrained('jinaai/jina-clip-v2', trust_remote_code=True)
+    full_model.eval()
+    print("Image tower loaded successfully!")
+    
+    sentences = [
+        'غروب جميل على الشاطئ',
+        '海滩上美丽的日落',
+        'Un beau coucher de soleil sur la plage',
+        'Ein wunderschöner Sonnenuntergang am Strand',
+        'Ένα όμορφο ηλιοβασίλεμα πάνω από την παραλία',
+        'समुद्र तट पर एक खूबसूरत सूर्यास्त',
+        'Un bellissimo tramonto sulla spiaggia',
+        '浜辺に沈む美しい夕日',
+        '해변 위로 아름다운 일몰',
+    ]
+    
+    image_urls = [
+        '/root/llama.cpp-clip/tools/mtmd/test-1.jpeg',
+        '/root/llama.cpp-clip/media/llama1-logo.png'
+    ]
+    
+    truncate_dim = 512
+    
+    print("Encoding text with custom model...")
+    try:
+        from transformers import AutoTokenizer
+        tokenizer = AutoTokenizer.from_pretrained('jinaai/jina-embeddings-v3')
+        
+        inputs = tokenizer(sentences, return_tensors='pt', padding=True, truncation=True, max_length=512)
+        with torch.no_grad():
+            outputs = text_model(**inputs)
+            print(f"Model output type: {type(outputs)}")
+            print(f"Model output keys: {outputs.keys() if hasattr(outputs, 'keys') else 'No keys'}")
+            
+            if hasattr(outputs, 'last_hidden_state'):
+                text_embeddings = outputs.last_hidden_state.mean(dim=1)
+            elif hasattr(outputs, 'hidden_states') and outputs.hidden_states is not None:
+                text_embeddings = outputs.hidden_states[-1].mean(dim=1)
+            else:
+                text_embeddings = outputs.mean(dim=1) if isinstance(outputs, torch.Tensor) else outputs
+                
+            if truncate_dim and hasattr(text_embeddings, 'shape') and len(text_embeddings.shape) > 1:
+                text_embeddings = text_embeddings[:, :truncate_dim]
+        
+        print(f"Text encoding successful! Shape: {text_embeddings.shape}")
+    except Exception as e:
+        print(f"Text encoding failed: {e}")
+        return
+    
+    print("Encoding images with original model...")
+    try:
+        image_embeddings = full_model.encode_image(image_urls, truncate_dim=truncate_dim)
+        print(f"Image encoding successful! Shape: {image_embeddings.shape}")
+    except Exception as e:
+        print(f"Image encoding failed: {e}")
+        return
+    
+    print("Encoding query with custom model...")
+    query = 'beautiful sunset over the beach'
+    try:
+        query_inputs = tokenizer([query], return_tensors='pt', padding=True, truncation=True, max_length=512)
+        with torch.no_grad():
+            query_outputs = text_model(**query_inputs)
+            if hasattr(query_outputs, 'last_hidden_state'):
+                query_embeddings = query_outputs.last_hidden_state.mean(dim=1)
+            elif hasattr(query_outputs, 'hidden_states') and query_outputs.hidden_states is not None:
+                query_embeddings = query_outputs.hidden_states[-1].mean(dim=1)
+            else:
+                query_embeddings = query_outputs.mean(dim=1) if isinstance(query_outputs, torch.Tensor) else query_outputs
+                
+            if truncate_dim and hasattr(query_embeddings, 'shape') and len(query_embeddings.shape) > 1:
+                query_embeddings = query_embeddings[:, :truncate_dim]
+        
+        print(f"Query encoding successful! Shape: {query_embeddings.shape}")
+    except Exception as e:
+        print(f"Query encoding failed: {e}")
+        return
+    
+    print("\nSimilarity results:")
+    print('En -> Img: ' + str(query_embeddings @ image_embeddings[0].T))
+    print('Img -> Img: ' + str(image_embeddings[0] @ image_embeddings[1].T))
+    print('En -> Ar: ' + str(query_embeddings @ text_embeddings[0].T))
+    print('En -> Zh: ' + str(query_embeddings @ text_embeddings[1].T))
+    print('En -> Fr: ' + str(query_embeddings @ text_embeddings[2].T))
+    print('En -> De: ' + str(query_embeddings @ text_embeddings[3].T))
+    print('En -> Gr: ' + str(query_embeddings @ text_embeddings[4].T))
+    print('En -> Hi: ' + str(query_embeddings @ text_embeddings[5].T))
+    print('En -> It: ' + str(query_embeddings @ text_embeddings[6].T))
+    print('En -> Jp: ' + str(query_embeddings @ text_embeddings[7].T))
+    print('En -> Ko: ' + str(query_embeddings @ text_embeddings[8].T))
+    
+    print("\nSeparate tower test completed!")
+    return text_model, full_model
+
+
+if __name__=='__main__':
+    separate_tower_test()
 

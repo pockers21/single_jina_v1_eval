@@ -66,8 +66,8 @@ class Mlp(nn.Module):
                 task_y = self.fc1(task_tensor)
                 print('fc1',task_y[0,0,:5],LA.matrix_norm(task_y))#[-2.8712, -3.6262, -0.5895, -3.5080, -3.8690]
                 y[task_indices] = task_y# [1 8 4096]y, y_task
-        # else:## not here
-        #     y = self.fc1(x)
+        else:
+            y = self.fc1(x)
 
         y = self.activation(y)# gelu [1 8 4096]
 
@@ -85,8 +85,8 @@ class Mlp(nn.Module):
                 task_out = self.fc2(task_tensor)
                 print('fc2',task_out[0,0,:5],LA.matrix_norm(task_out))#[-0.0954,  0.0966,  0.0742, -0.1724, -0.0446]
                 out[task_indices] = task_out#[1 8 1024]
-        # else:# not here
-        #     out = self.fc2(y)
+        else:
+            out = self.fc2(y)
 
         return out if not self.return_residual else (out, x)# 后者
 

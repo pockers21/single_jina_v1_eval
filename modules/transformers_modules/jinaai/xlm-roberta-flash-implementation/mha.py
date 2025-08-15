@@ -709,14 +709,14 @@ class MHA(nn.Module):
                                                 )
                     qkv[task_indices] = task_qkv;print('qkv',qkv[0,0,:10],LA.matrix_norm(qkv))#[-0.7495, -0.0796, -0.3332,  0.9270,  0.9582]
                     #print(doneHere)
-            # else:# not here
-            #     if not self.return_residual:
-            #         qkv = self.Wqkv(x)
-            #     else:
-            #         if hasattr(self.Wqkv, "parametrizations"):
-            #             qkv, x = self.Wqkv(x, residual=True)
-            #         else:
-            #             qkv, x = self.Wqkv(x)
+            else:
+                if not self.return_residual:
+                    qkv = self.Wqkv(x)
+                else:
+                    if hasattr(self.Wqkv, "parametrizations"):
+                        qkv, x = self.Wqkv(x, residual=True)
+                    else:
+                        qkv, x = self.Wqkv(x)
 
             # if self.dwconv:# not here
             #     qkv = rearrange(
@@ -832,6 +832,6 @@ class MHA(nn.Module):
                 task_out = self.out_proj(task_tensor);print('outproj',task_out[0,0,:5],LA.matrix_norm(task_tensor))
                 out[task_indices] = task_out# out[1 8 1024]
 
-        # else:# not her
-        #     out = self.out_proj(inp)
+        else:
+            out = self.out_proj(inp)
         return out if not self.return_residual else (out, x)#后者

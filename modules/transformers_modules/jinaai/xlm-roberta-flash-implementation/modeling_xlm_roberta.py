@@ -215,7 +215,7 @@ class XLMRobertaEncoder(nn.Module):
         This means that we only compute the last layer output for these tokens.
         subset_mask: (batch, seqlen), dtype=torch.bool
         """
-
+        
         all_hidden_states = () if output_hidden_states else None
 
         if output_hidden_states and subset_mask:# not here
