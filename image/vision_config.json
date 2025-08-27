@@ -1,0 +1,22 @@
+{
+    "embed_dim": 1024,
+    "fused_layer_norm": false,
+    "head_width": 64,
+    "image_size": 512,
+    "intp_freq": true,
+    "layers": 24,
+    "ls_init_value": null,
+    "mlp_ratio": 2.6667,
+    "model_type": "jina_clip_vision",
+    "naive_swiglu": true,
+    "patch_dropout": 0.1,
+    "patch_size": 14,
+    "post_norm": false,
+    "proj_type": null,
+    "pt_hw_seq_len": 16,
+    "qkv_bias": true,
+    "rope_embeddings": true,
+    "subln": true,
+    "width": 1024,
+    "x_attention": false
+}

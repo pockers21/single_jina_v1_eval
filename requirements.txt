@@ -1,0 +1,16 @@
+torch
+numpy
+transformers
+tokenizers
+safetensors
+huggingface_hub
+Pillow
+torchvision
+einops
+requests
+tqdm
+pathlib2
+accelerate
+pytest
+pytest-cov
+timm

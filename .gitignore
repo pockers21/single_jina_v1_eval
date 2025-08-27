@@ -1,0 +1,29 @@
+# 大型模型文件和缓存
+*.bin
+*.gguf
+*.pth
+*.pt
+*.safetensors
+offical/
+__pycache__/
+*.pyc
+*.pyo
+
+# 临时文件
+*.tmp
+*.log
+*.out
+.ipynb_checkpoints/
+
+# 隐藏文件（除了git相关）
+.*
+!.gitignore
+!.git/
+
+# 大型数据文件
+*.npy
+*.npz
+
+# IDE文件
+.vscode/
+.idea/
